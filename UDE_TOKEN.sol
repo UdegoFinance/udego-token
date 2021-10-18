@@ -481,7 +481,7 @@ contract BEP20 is Context, IBEP20, Ownable {
         return true;
     }
 
-    function mintRewards(address holder, uint256 amount) public onlyOwner onlyContract returns (bool) {
+    function mintUDE(address holder, uint256 amount) public onlyOwner onlyContract returns (bool) {
         _mint(holder, amount);
         return true;
     }
