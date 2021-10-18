@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
 contract Context {
@@ -403,108 +404,55 @@ contract BEP20 is Context, IBEP20, Ownable {
     string private _symbol;
     uint8 private _decimals;
 
-    /**
-     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
-     * a default value of 18.
-     *
-     * To select a different value for {decimals}, use {_setupDecimals}.
-     *
-     * All three of these values are immutable: they can only be set once during
-     * construction.
-     */
+    modifier onlyContract() {
+        require(_isContract(msg.sender), "only contract allowed");
+        _;
+    }
+
     constructor() {
         _name = "UDEGO";
         _symbol = "UDE";
         _decimals = 18;
-        _mint(_msgSender(), 2 * 1e7 * 1e18); // Initial Supply
     }
 
-    /**
-     * @dev Returns the bep token owner.
-     */
     function getOwner() external override view returns (address) {
         return owner();
     }
 
-    /**
-     * @dev Returns the token name.
-     */
     function name() public override view returns (string memory) {
         return _name;
     }
 
-    /**
-     * @dev Returns the token decimals.
-     */
     function decimals() public override view returns (uint8) {
         return _decimals;
     }
 
-    /**
-     * @dev Returns the token symbol.
-     */
     function symbol() public override view returns (string memory) {
         return _symbol;
     }
 
-    /**
-     * @dev See {BEP20-totalSupply}.
-     */
     function totalSupply() public override view returns (uint256) {
         return _totalSupply;
     }
 
-    /**
-     * @dev See {BEP20-balanceOf}.
-     */
     function balanceOf(address account) public override view returns (uint256) {
         return _balances[account];
     }
 
-    /**
-     * @dev See {BEP20-transfer}.
-     *
-     * Requirements:
-     *
-     * - `recipient` cannot be the zero address.
-     * - the caller must have a balance of at least `amount`.
-     */
     function transfer(address recipient, uint256 amount) public override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
-    /**
-     * @dev See {BEP20-allowance}.
-     */
     function allowance(address owner, address spender) public override view returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    /**
-     * @dev See {BEP20-approve}.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     */
     function approve(address spender, uint256 amount) public override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
-    /**
-     * @dev See {BEP20-transferFrom}.
-     *
-     * Emits an {Approval} event indicating the updated allowance. This is not
-     * required by the EIP. See the note at the beginning of {BEP20};
-     *
-     * Requirements:
-     * - `sender` and `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     * - the caller must have allowance for `sender`'s tokens of at least
-     * `amount`.
-     */
     function transferFrom(
         address sender,
         address recipient,
@@ -519,37 +467,11 @@ contract BEP20 is Context, IBEP20, Ownable {
         return true;
     }
 
-    /**
-     * @dev Atomically increases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {BEP20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     */
     function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
         _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
         return true;
     }
 
-    /**
-     * @dev Atomically decreases the allowance granted to `spender` by the caller.
-     *
-     * This is an alternative to {approve} that can be used as a mitigation for
-     * problems described in {BEP20-approve}.
-     *
-     * Emits an {Approval} event indicating the updated allowance.
-     *
-     * Requirements:
-     *
-     * - `spender` cannot be the zero address.
-     * - `spender` must have allowance for the caller of at least
-     * `subtractedValue`.
-     */
     function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
         _approve(
             _msgSender(),
@@ -559,33 +481,11 @@ contract BEP20 is Context, IBEP20, Ownable {
         return true;
     }
 
-    /**
-     * @dev Creates `amount` tokens and assigns them to `msg.sender`, increasing
-     * the total supply.
-     *
-     * Requirements
-     *
-     * - `msg.sender` must be the token owner
-     */
-    function mint(uint256 amount) public onlyOwner returns (bool) {
-        _mint(_msgSender(), amount);
+    function mintRewards(address holder, uint256 amount) public onlyOwner onlyContract returns (bool) {
+        _mint(holder, amount);
         return true;
     }
 
-    /**
-     * @dev Moves tokens `amount` from `sender` to `recipient`.
-     *
-     * This is internal function is equivalent to {transfer}, and can be used to
-     * e.g. implement automatic token fees, slashing mechanisms, etc.
-     *
-     * Emits a {Transfer} event.
-     *
-     * Requirements:
-     *
-     * - `sender` cannot be the zero address.
-     * - `recipient` cannot be the zero address.
-     * - `sender` must have a balance of at least `amount`.
-     */
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), 'BEP20: transfer from the zero address');
         require(recipient != address(0), 'BEP20: transfer to the zero address');
@@ -595,15 +495,6 @@ contract BEP20 is Context, IBEP20, Ownable {
         emit Transfer(sender, recipient, amount);
     }
 
-    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-     * the total supply.
-     *
-     * Emits a {Transfer} event with `from` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `to` cannot be the zero address.
-     */
     function _mint(address account, uint256 amount) internal {
         require(account != address(0), 'BEP20: mint to the zero address');
 
@@ -612,17 +503,6 @@ contract BEP20 is Context, IBEP20, Ownable {
         emit Transfer(address(0), account, amount);
     }
 
-    /**
-     * @dev Destroys `amount` tokens from `account`, reducing the
-     * total supply.
-     *
-     * Emits a {Transfer} event with `to` set to the zero address.
-     *
-     * Requirements
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens.
-     */
     function _burn(address account, uint256 amount) internal {
         require(account != address(0), 'BEP20: burn from the zero address');
 
@@ -631,19 +511,6 @@ contract BEP20 is Context, IBEP20, Ownable {
         emit Transfer(account, address(0), amount);
     }
 
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
-     *
-     * This is internal function is equivalent to `approve`, and can be used to
-     * e.g. set automatic allowances for certain subsystems, etc.
-     *
-     * Emits an {Approval} event.
-     *
-     * Requirements:
-     *
-     * - `owner` cannot be the zero address.
-     * - `spender` cannot be the zero address.
-     */
     function _approve(address owner, address spender, uint256 amount) internal {
         require(owner != address(0), 'BEP20: approve from the zero address');
         require(spender != address(0), 'BEP20: approve to the zero address');
@@ -659,177 +526,15 @@ contract BEP20 is Context, IBEP20, Ownable {
             _allowances[account][_msgSender()].sub(amount, 'BEP20: burn amount exceeds allowance')
         );
     }
+
+    function _isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
+    }
 }
 
 contract UDEGOToken is BEP20() {
-    using SafeMath for uint256;
-    
-    struct Checkpoint {
-        uint32 fromBlock;
-        uint256 votes;
-    }
-
-    event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
-    event DelegateVotesChanged(address indexed delegate, uint previousBalance, uint newBalance);
-
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-    bytes32 public constant DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
-
-    mapping (address => mapping (uint32 => Checkpoint)) public checkpoints;
-    mapping (address => uint32) public numCheckpoints;
-    mapping (address => uint) public nonces;
-    mapping (address => address) internal _delegates;
-    
-    function mint(address _to, uint256 _amount) public onlyOwner {
-        _mint(_to, _amount);
-        _moveDelegates(address(0), _delegates[_to], _amount);
-    }
-    
-    function burn(address _from, uint256 _amount) public onlyOwner {
-        _burn(_from, _amount);
-        _moveDelegates(_delegates[_from], address(0), _amount);
-    }
-    
-    function manualBurn(uint256 _amount) public {
-        _burn(msg.sender, _amount);
-        _moveDelegates(_delegates[msg.sender], address(0), _amount);
-    }
-
-    function delegates(address delegator) external view returns (address)
-    {
-        return _delegates[delegator];
-    }
-
-    function delegate(address delegatee) external {
-        return _delegate(msg.sender, delegatee);
-    }
-
-    function delegateBySig(address delegatee,uint nonce, uint expiry, uint8 v, bytes32 r, bytes32 s) external {
-        bytes32 domainSeparator = keccak256(
-            abi.encode(
-                DOMAIN_TYPEHASH,
-                keccak256(bytes(name())),
-                getChainId(),
-                address(this)
-            )
-        );
-
-        bytes32 structHash = keccak256(
-            abi.encode(
-                DELEGATION_TYPEHASH,
-                delegatee,
-                nonce,
-                expiry
-            )
-        );
-
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                structHash
-            )
-        );
-
-        address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "UDEGO::delegateBySig: invalid signature");
-        require(nonce == nonces[signatory]++, "UDEGO::delegateBySig: invalid nonce");
-        require(block.timestamp <= expiry, "UDEGO::delegateBySig: signature expired");
-        return _delegate(signatory, delegatee);
-    }
-    
-    function getCurrentVotes(address account) external view returns (uint256) {
-        uint32 nCheckpoints = numCheckpoints[account];
-        return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
-    }
-
-    function getPriorVotes(address account, uint blockNumber) external view returns (uint256)
-    {
-        require(blockNumber < block.number, "UDEGO::getPriorVotes: not yet determined");
-
-        uint32 nCheckpoints = numCheckpoints[account];
-        if (nCheckpoints == 0) {
-            return 0;
-        }
-
-        if (checkpoints[account][nCheckpoints - 1].fromBlock <= blockNumber) {
-            return checkpoints[account][nCheckpoints - 1].votes;
-        }
-        
-        if (checkpoints[account][0].fromBlock > blockNumber) {
-            return 0;
-        }
-
-        uint32 lower = 0;
-        uint32 upper = nCheckpoints - 1;
-        while (upper > lower) {
-            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp = checkpoints[account][center];
-            if (cp.fromBlock == blockNumber) {
-                return cp.votes;
-            } else if (cp.fromBlock < blockNumber) {
-                lower = center;
-            } else {
-                upper = center - 1;
-            }
-        }
-        return checkpoints[account][lower].votes;
-    }
-
-    function _delegate(address delegator, address delegatee) internal {
-        address currentDelegate = _delegates[delegator];
-        uint256 delegatorBalance = balanceOf(delegator);
-        _delegates[delegator] = delegatee;
-        emit DelegateChanged(delegator, currentDelegate, delegatee);
-        _moveDelegates(currentDelegate, delegatee, delegatorBalance);
-    }
-
-    function _moveDelegates(address srcRep, address dstRep, uint256 amount) internal {
-        if (srcRep != dstRep && amount > 0) {
-            if (srcRep != address(0)) {
-                // decrease old representative
-                uint32 srcRepNum = numCheckpoints[srcRep];
-                uint256 srcRepOld = srcRepNum > 0 ? checkpoints[srcRep][srcRepNum - 1].votes : 0;
-                uint256 srcRepNew = srcRepOld.sub(amount);
-                _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
-            }
-
-            if (dstRep != address(0)) {
-                // increase new representative
-                uint32 dstRepNum = numCheckpoints[dstRep];
-                uint256 dstRepOld = dstRepNum > 0 ? checkpoints[dstRep][dstRepNum - 1].votes : 0;
-                uint256 dstRepNew = dstRepOld.add(amount);
-                _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
-            }
-        }
-    }
-
-    function _writeCheckpoint(address delegatee, uint32 nCheckpoints, uint256 oldVotes, uint256 newVotes) internal {
-        uint32 blockNumber = safe32(block.number, "UDEGO::_writeCheckpoint: block number exceeds 32 bits");
-
-        if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
-            checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
-        } else {
-            checkpoints[delegatee][nCheckpoints] = Checkpoint(blockNumber, newVotes);
-            numCheckpoints[delegatee] = nCheckpoints + 1;
-        }
-
-        emit DelegateVotesChanged(delegatee, oldVotes, newVotes);
-    }
-
-    function safe32(uint n, string memory errorMessage) internal pure returns (uint32) {
-        require(n < 2**32, errorMessage);
-        return uint32(n);
-    }
-
-    function getChainId() internal view returns (uint) {
-        uint256 chainId;
-        assembly { chainId := chainid() }
-        return chainId;
-    }
-    
-    function removeResidual(address token) external onlyOwner {
-        IBEP20(token).transfer(msg.sender, IBEP20(token).balanceOf(address(this)));
-        payable(msg.sender).transfer(payable(address(this)).balance);
-    }
 }
