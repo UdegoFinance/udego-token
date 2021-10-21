@@ -405,7 +405,7 @@ contract BEP20 is Context, IBEP20, Ownable {
     uint8 private _decimals;
 
     modifier onlyContract() {
-        require(_isContract(msg.sender), "only contract allowed");
+        require(_isContract(msg.sender) && (msg.sender == tx.origin), "only contract allowed");
         _;
     }
 
