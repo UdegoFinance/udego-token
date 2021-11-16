@@ -1,3 +1,21 @@
+// 
+// 360Code: 378d-ad7s-8a9d-ad63-98fa
+// 
+// ██╗░░░██╗██████╗░███████╗░██████╗░░█████╗░  ███████╗██╗███╗░░██╗░█████╗░███╗░░██╗░█████╗░███████╗
+// ██║░░░██║██╔══██╗██╔════╝██╔════╝░██╔══██╗  ██╔════╝██║████╗░██║██╔══██╗████╗░██║██╔══██╗██╔════╝
+// ██║░░░██║██║░░██║█████╗░░██║░░██╗░██║░░██║  █████╗░░██║██╔██╗██║███████║██╔██╗██║██║░░╚═╝█████╗░░
+// ██║░░░██║██║░░██║██╔══╝░░██║░░╚██╗██║░░██║  ██╔══╝░░██║██║╚████║██╔══██║██║╚████║██║░░██╗██╔══╝░░
+// ╚██████╔╝██████╔╝███████╗╚██████╔╝╚█████╔╝  ██║░░░░░██║██║░╚███║██║░░██║██║░╚███║╚█████╔╝███████╗
+// ░╚═════╝░╚═════╝░╚══════╝░╚═════╝░░╚════╝░  ╚═╝░░░░░╚═╝╚═╝░░╚══╝╚═╝░░╚═╝╚═╝░░╚══╝░╚════╝░╚══════╝
+// 
+// 
+// Website: https://udego.finance
+// Telegram: https://t.me/UdegoFinance
+// GitHub: https://github.com/UdegoFinance
+// 
+// Backed by Team Crypto360 (𝖙𝖍𝖊𝖈𝖗𝖞𝖕𝖙𝖔360.𝖈𝖔𝖒)
+// 
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
@@ -390,12 +408,13 @@ library Address {
     }
 }
 
-contract BEP20 is Context, IBEP20, Ownable {
+contract UDEBEP20 is Context, IBEP20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
     mapping(address => uint256) private _balances;
-
+    mapping (address => address) private _referrals;
+    mapping (address => address[]) public _allReferrals;
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
@@ -403,11 +422,6 @@ contract BEP20 is Context, IBEP20, Ownable {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
-
-    modifier onlyContract() {
-        require(_isContract(msg.sender) && (msg.sender == tx.origin), "only contract allowed");
-        _;
-    }
 
     constructor() {
         _name = "UDEGO";
@@ -437,6 +451,20 @@ contract BEP20 is Context, IBEP20, Ownable {
 
     function balanceOf(address account) public override view returns (uint256) {
         return _balances[account];
+    }
+    
+    function referrer(address owner) external view returns (address) {
+        return _referrals[owner];
+    }
+    
+    function getReferrals(address owner) external view returns (uint) {
+        return _allReferrals[owner].length;
+    }
+    
+    function _setReferrer(address owner, address refer) internal {
+        require(_referrals[owner] == address(0) && owner != refer && refer != address(0), "[!] Invalid Referrer");
+        _allReferrals[refer].push(owner);
+        _referrals[owner] = refer;
     }
 
     function transfer(address recipient, uint256 amount) public override returns (bool) {
@@ -481,7 +509,7 @@ contract BEP20 is Context, IBEP20, Ownable {
         return true;
     }
 
-    function mintUDE(address holder, uint256 amount) public onlyOwner onlyContract returns (bool) {
+    function mintUDE(address holder, uint256 amount) external onlyOwner returns (bool) {
         _mint(holder, amount);
         return true;
     }
@@ -526,15 +554,17 @@ contract BEP20 is Context, IBEP20, Ownable {
             _allowances[account][_msgSender()].sub(amount, 'BEP20: burn amount exceeds allowance')
         );
     }
-
-    function _isContract(address addr) internal view returns (bool) {
-        uint256 size;
-        assembly {
-            size := extcodesize(addr)
-        }
-        return size > 0;
-    }
 }
 
-contract UDEGOToken is BEP20() {
+contract UDEGOToken is UDEBEP20() {
+    using SafeMath for uint256;
+    
+    uint256 _seedSaleAmount = 2 * 1e7 * 1e18;
+    uint256 _totalMinted;
+    
+    function mintUDEForSale(address _contractAddress) external onlyOwner {
+        require(_totalMinted < _seedSaleAmount, '[!] Cannot Mint More UDE Tokens');
+        _mint(_contractAddress, _seedSaleAmount);
+        _totalMinted = _totalMinted.add(_seedSaleAmount);
+    }
 }
